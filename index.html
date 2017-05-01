@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+
+<html lang='en'>
+
+<head>
+    <meta charset='UTF-8'>
+    <title>Comparing World Happiness</title>
+    <meta name="author" content="Raza Anees">
+
+    <link rel="stylesheet" href="css/main.css">
+    <script type="text/javascript" src="https://d3js.org/d3.v3.min.js"></script>
+</head>
+
+<body onload="main()">
+
+    <header>
+        <h1>Changes in World Happiness</h1>
+
+        <nav id='year-filter'></nav>
+        <nav id='country-filter'></nav>
+    </header>
+
+    <section id='slopegraph' class='slope'></section>
+
+    <!-- ****************** start d3 code ****************** -->
+    <!-- main.js script -->
+    <script src="js/main.js"></script>
+
+    <script>
+    // render slopgraph chart
+
+    function main() {
+        'use strict';
+
+        // load the data
+            // years to be shown from the data
+        var data,
+        keyValues = ['2015', '2016', '2017'];
+
+        // store chart
+        var slopegraph;
+        // track user interaction
+        var state = {
+            // mutate array
+            keys: keyValues,
+            // track filtered sets
+            filter: [],
+            // toggle specific countries
+            navToggle: [],
+            // track line selection
+            highlight: null
+        };
+
+        d3.json('data/data.json', function(error, dd) {
+            if (error) throw error;
+            dd.forEach(function(d) {
+                d["2015"] = +d["2015"];
+                d["2016"] = +d["2016"];
+                d["2017"] = +d["2017"];
+            });
+            // reference data outside of this initialization
+            data = dd;
+            // initial render of chart
+            render(data, keyValues);
+            // navigation
+            filterCountry(data);
+            // filtering options
+            filterYear();
+        });
+
+        // filter based on user interaction
+        function filterYear() {
+            // create array values
+            keyValues.forEach(function(n) {
+                state["filter"].push(false);
+            });
+            d3.select('nav#year-filter').append('ul')
+                .selectAll('li')
+                .data(keyValues)
+                .enter()
+                .append('li')
+                .on('click', function(d, i) {
+                    // if a year was clicked when it was already toggled off
+                    if (state.filter[i]) {
+                        // toggle
+                        state.filter[i] = false;
+                        d3.select(this).style('opacity', 1);
+                        // add year to array
+                        state.keys.push(d);
+                        // keep array in chronological order
+                        state.keys.sort();
+                        // render with new keys
+                        render(data, state.keys);
+                    }
+                    // Disable the clicked year if
+                    // at least two values are selected
+                    else if (!state.filter[i] && state.keys.length > 2) {
+                        state.filter[i] = true;
+                        d3.select(this).style('opacity', 0.3);
+                        state.keys.splice(i, 1);
+                        state.keys.sort();
+                        render(data, state.keys);
+                    }
+                })
+                .text(function(d) {return d;});
+        }
+
+        // highlight lines based on user interaction
+        function filterCountry(data) {
+            data.forEach(function(n) {
+                state.navToggle.push(false);
+            });
+
+            d3.select('nav#country-filter')
+                .append('ul')
+                .selectAll('li')
+                .data(data)
+                .enter()
+                .append('li')
+                .attr('class', function(d, i) {return 'navAlt li-'+i;})
+                .on('click', function(d, i) {
+                    // if the country has already been clicked and filtered out
+                    if (state.navToggle[i]) {
+                        state.navToggle[i] = false;
+                        resetSelection();
+                        state.highlight=null;
+                    }
+                    else if (!state.navToggle[i]) {
+                        state.navToggle[i] = true;
+                        // highlight the selected line
+                        highlightLine(i);
+                        // highlight the navigation button related to the line
+                        highlightNav(i);
+                        // reflect highlighted line in state
+                        state.highlight = i;
+                    }
+                })
+                .text(function(d) {return d["country"];});
+        }
+
+        // render the slopegraph
+        function render(data, keys) {
+            resetSelection();
+            // create chart
+
+            slopegraph = slopey()
+                .w(400)
+
+                .margin({top: 30, bottom: 20, left: 100, right: 100})
+                .gutter(25)
+                .keyName('country')
+                .keyValues(keys)
+                .on('_hover', function(d, i) {
+                    // highlight line based on hovered cursor
+                    highlightLine(i);
+                    // highlight navigation pane related to highlighted line
+                    highlightNav(i);
+                    // update state of the highlighted line
+                    state.highlight = i;
+                });
+
+            // apply chart
+            d3.select('section.slope')
+                .datum(data)
+                .call(slopegraph);
+
+            // ensure highlight is maintained when graph is updated
+            if (state.highlight !== null) {
+                d3.selectAll('.elm').style('opacity', 0.2);
+                d3.selectAll('.sel-' + state.highlight).style('opacity', 1);
+                highlightNav(state.highlight);
+            }
+        }
+
+        // highlight the selected line
+        function highlightLine(i) {
+            d3.selectAll('.elm')
+            .transition()
+            .style('opacity', 0.2);
+            d3.selectAll('.sel-'+i).transition().style('opacity', 1);
+        }
+
+        // highlight the corresponding country in the navigation pane
+        function highlightNav(i) {
+            d3.selectAll('.navAlt').transition().style('opacity', 0.2);
+            d3.selectAll('.li-' + i).transition().style('opacity', 1);
+        }
+
+        // reset the chart and clear any selections
+        function resetSelection() {
+            d3.selectAll('.elm').transition().style('opacity', 1);
+            d3.selectAll('.navAlt').transition().style('opacity', 1);
+        }
+    };
+    </script>
+</body>
+</html>

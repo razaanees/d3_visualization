@@ -1,0 +1,42 @@
+h1 {
+    font-size: 18px;
+    font-weight: 400;
+    margin-bottom: 0;
+}
+
+#country-filter ul, #year-filter ul {
+    color: #130C0E;
+    font-size: 11px;
+    letter-spacing: 1px;
+    list-style: none;
+    padding: 0;
+    margin: 10px 0 10px 0;
+    text-align: justify;
+}
+
+#country-filter ul li, #year-filter ul li {
+    display: inline-block;
+    padding: 1px 8px;
+    margin-right: 1px;
+    background: #A4CD39;
+    cursor: pointer;
+    position: relative;
+}
+
+.slope {
+    display: inline-block;
+    width: 100%;
+    padding-top: 20px;
+}
+
+text.labels {
+    font-size: 11px;
+    fill: #ce2b2b;
+}
+
+text.s-title, text.m-title, text.e-title {
+    fill: #7AC143;
+    letter-spacing: 2px;
+    font-size: 11px;
+    margin-bottom: 10px;
+}
