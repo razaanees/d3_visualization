@@ -7,16 +7,16 @@ var slopey = function() {
     "use strict";
 
     var w = 200, // width
-        h = 600,
+        h = 500,
         margin = {top: 40, bottom: 40, left: 80, right: 80},
         gutter = 50,
-        strokeColour = 'black',
+        strokeColour = '#8d9093',
         keyValues = [],
         keyName = '',
         format = d3.format(''),
         sets;
 
-    var dispatch = d3.dispatch('_hover');
+    var dispatch = d3.dispatch('_hover', "_moveaway");
 
     var svg, yScale;
 
@@ -65,7 +65,8 @@ var slopey = function() {
     // connecting lines
     function lines (data, n) {
 
-        var lines = svg.selectAll('.s-line-'+n)
+        var lines = svg
+            .selectAll('.s-line-'+n)
             .data(data)
             .enter().append('line');
 
@@ -88,7 +89,17 @@ var slopey = function() {
                 }
             },
             y2: function(d) {return yScale(d[keyValues[n+1]]);},
-            stroke:  strokeColour,
+            // green stroke if happiness score increased by more than 10%
+            // red stroke if happiness score decreased by more than 10%
+            stroke: function(d) {
+                if (d[keyValues[n+1]] > d[keyValues[n]]*1.1) {
+                    return "#15c418";
+                } else if (d[keyValues[n+1]] < d[keyValues[n]]/1.1) {
+                    return "#af2f0c";
+                } else {
+                    return strokeColour;
+                }
+            },
             'stroke-width': 1,
             class: function(d, i) {return 'elm s-line-' + n + ' sel-' + i;}
         })
@@ -103,15 +114,16 @@ var slopey = function() {
             .enter()
             .append('text')
             .attr({
-                class: function(d,i) {return 'labels l-labels elm sel-'+i},
+                class: function(d,i) {return 'labels l-labels elm lab-'+i},
                 x: margin.left - 3,
                 y: function (d) {return yScale(d[keyValues[0]])+4;}
             })
             .text(function (d) {
-                return d[keyName] + ' ' + format(d[keyValues[0]])
+                return d[keyName] + ' ' + format(d[keyValues[0]]);
             })
             .style('text-anchor', 'end')
-            .on('mouseover', dispatch._hover);
+            .on('mouseover', dispatch._hover)
+            .on('mouseout', dispatch._moveaway);
 
         // year title
         svg.append('text')
@@ -132,13 +144,14 @@ var slopey = function() {
                 .enter()
                 .append('text')
                 .attr({
-                    class: function(d,i) {return 'labels m-labels-' + n +' elm'+' sel-'+i;},
+                    class: function(d,i) {return 'labels m-labels-' + n +' elm'+' lab-'+i;},
                     x: ((w/sets)*(n+1)) + 15,
                     y: function(d) {return yScale(d[keyValues[n+1]]) + 4;}
                 })
                 .text(function(d) {return format(d[keyValues[n+1]]);})
                 .style('text-anchor', 'end')
-                .on('mouseover', dispatch._hover);
+                .on('mouseover', dispatch._hover)
+                .on('mouseout', dispatch._moveaway);
 
         // year title at the top of the labels
         svg.append('text')
@@ -164,7 +177,7 @@ var slopey = function() {
             .append('text')
             .attr({
                 class: function(d,i) {
-                    return "labels e-labels- elm sel-" + i;
+                    return "labels e-labels- elm lab-" + i;
                 },
                 x: w-margin.right + 4,
                 y: function(d) {return yScale(d[keyValues[e]]);}
@@ -173,7 +186,8 @@ var slopey = function() {
                 return d[keyName] + " " + format(d[keyValues[e]]);
             })
             .style('text-anchor', 'start')
-            .on('mouseover', dispatch._hover);
+            .on('mouseover', dispatch._hover)
+            .on('mouseout', dispatch._moveaway);
 
         // year title on top
         svg.append('text')

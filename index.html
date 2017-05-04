@@ -16,8 +16,28 @@
     <header>
         <h1>Changes in World Happiness</h1>
 
+        <div class="description">
+            <p>
+                The Sustainable Development Solutions Network (SDSN) creates
+                "Happiness Scores" based on six factors: GDP per capita, Social
+                support, Generosity, Freedom, Trust in Government, and Health. The
+                Slopegraph below shows how those Happiness Scores have changed from
+                2015 to 2017.<br><br>
+                The year 2016 can be filtered by clicking on the "2016" button
+                below. Countries can also be filtered by clicking on their names
+                or hovering over their labels below.
+
+            </p>
+        </div>
+
+        <ul class="legend">
+            <li><span class="increase_10"></span>Happiness Increase > 10%</li>
+            <li><span class="no_change"></span>No major change</li>
+            <li><span class="decrease_10"></span>Happiness Decrease > 10%</li>
+        </ul>
         <nav id='year-filter'></nav>
         <nav id='country-filter'></nav>
+        <div class="buffer"></div>
     </header>
 
     <section id='slopegraph' class='slope'></section>
@@ -48,7 +68,7 @@
             // toggle specific countries
             navToggle: [],
             // track line selection
-            highlight: null
+            highlight: []
         };
 
         d3.json('data/data.json', function(error, dd) {
@@ -120,19 +140,28 @@
                 .attr('class', function(d, i) {return 'navAlt li-'+i;})
                 .on('click', function(d, i) {
                     // if the country has already been clicked and filtered out
-                    if (state.navToggle[i]) {
+                    if (state.navToggle[i] || state.highlight === i) {
                         state.navToggle[i] = false;
-                        resetSelection();
-                        state.highlight=null;
+                        var index = state.highlight.indexOf(i)
+                        state.highlight.splice(index, 1);
+                        if (state.highlight.length === 0) {
+                            resetSelection();
+                        } else {
+                            highlightLine(state.highlight);
+                            highlightNav(state.highlight);
+                            highlightLabel(state.highlight);
+                        }
                     }
                     else if (!state.navToggle[i]) {
                         state.navToggle[i] = true;
+                        state.highlight.push(i);
                         // highlight the selected line
-                        highlightLine(i);
+                        highlightLine(state.highlight);
                         // highlight the navigation button related to the line
-                        highlightNav(i);
+                        highlightNav(state.highlight);
+                        // highlight the country name and happiness score
+                        highlightLabel(state.highlight);
                         // reflect highlighted line in state
-                        state.highlight = i;
                     }
                 })
                 .text(function(d) {return d["country"];});
@@ -144,19 +173,23 @@
             // create chart
 
             slopegraph = slopey()
-                .w(400)
+                .w(350)
 
-                .margin({top: 30, bottom: 20, left: 100, right: 100})
+                .margin({top: 30, bottom: 20, left: 140, right: 140})
                 .gutter(25)
                 .keyName('country')
                 .keyValues(keys)
                 .on('_hover', function(d, i) {
+                    state.highlight = [i];
                     // highlight line based on hovered cursor
-                    highlightLine(i);
+                    highlightLine(state.highlight);
                     // highlight navigation pane related to highlighted line
-                    highlightNav(i);
-                    // update state of the highlighted line
-                    state.highlight = i;
+                    highlightNav(state.highlight);
+                    highlightLabel(state.highlight);
+                })
+                .on('_moveaway',function(d, i) {
+                    resetSelection();
+                    state.highlight = [];
                 });
 
             // apply chart
@@ -165,32 +198,62 @@
                 .call(slopegraph);
 
             // ensure highlight is maintained when graph is updated
-            if (state.highlight !== null) {
-                d3.selectAll('.elm').style('opacity', 0.2);
-                d3.selectAll('.sel-' + state.highlight).style('opacity', 1);
+            if (state.highlight.length > 0) {
+                d3.selectAll('.elm').style('opacity', 0.2).style('stroke-width', 1);
                 highlightNav(state.highlight);
+                highlightLabel(state.highlight);
+                highlightLine(state.highlight);
             }
         }
 
         // highlight the selected line
-        function highlightLine(i) {
+        function highlightLine(highlight) {
             d3.selectAll('.elm')
             .transition()
-            .style('opacity', 0.2);
-            d3.selectAll('.sel-'+i).transition().style('opacity', 1);
+            .style('opacity', 0.2)
+            .style('stroke-width', 1);
+
+            var n = highlight.length;
+            for (var i = 0; i < n; i++) {
+                d3.selectAll('.sel-'+highlight[i]).transition()
+                .style('opacity', 1).style('stroke-width', 2);
+            }
         }
 
         // highlight the corresponding country in the navigation pane
-        function highlightNav(i) {
+        function highlightNav(highlight) {
             d3.selectAll('.navAlt').transition().style('opacity', 0.2);
-            d3.selectAll('.li-' + i).transition().style('opacity', 1);
+
+            var n = highlight.length;
+            for (var i = 0; i < n; i++) {
+                d3.selectAll('.li-' + highlight[i]).transition().style('opacity', 1);
+            }
+        }
+
+
+        // enlarge labels of selected country
+        function highlightLabel(highlight) {
+            d3.selectAll('.labels').transition().style('opacity', 0.2)
+            .style('font-size', "9.5px");
+
+            highlight.forEach(function(d) {
+                d3.selectAll('.lab-'+d).transition().style('opacity', 1)
+                .style('font-size', "12px");
+            })
         }
 
         // reset the chart and clear any selections
         function resetSelection() {
-            d3.selectAll('.elm').transition().style('opacity', 1);
+            d3.selectAll('.elm').transition().style('opacity', 1).style('stroke-width', 1);
             d3.selectAll('.navAlt').transition().style('opacity', 1);
+            d3.selectAll('.labels').style('font-size', "9.5px");
         }
+
+        d3.select('.buffer')
+        .on('mouseover', function() {
+            resetSelection();
+            state.highlight = [];
+        })
     };
     </script>
 </body>

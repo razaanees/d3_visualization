@@ -1,7 +1,30 @@
+body {
+    background: #E9DCCD;
+}
+
 h1 {
     font-size: 18px;
     font-weight: 400;
     margin-bottom: 0;
+    color: black;
+    margin-top: 20px;
+}
+
+header {
+    padding-top: 1em;
+    padding-bottom: 2px;
+    padding-left: 0.4em;
+    border-radius: 15%;
+    border-top: solid 10px #36384C;
+    margin-top: 0;
+    background: #E9DCCD;
+}
+
+div.description {
+    font-family: Verdana, Times, Arial;
+    font-size: 12px;
+    margin-bottom: 1em;
+    border-bottom: solid 2px #36364C;
 }
 
 #country-filter ul, #year-filter ul {
@@ -18,24 +41,69 @@ h1 {
     display: inline-block;
     padding: 1px 8px;
     margin-right: 1px;
-    background: #A4CD39;
+    background:#C0D9AF;
     cursor: pointer;
     position: relative;
+    margin-bottom: 1px;
+}
+
+.buffer {
+    width: auto;
+    height: 10px;
+    background: #E9DCCD;
+    padding: 0px;
+    margin: 0px;
+}
+
+line {
+    cursor: crosshair;
+}
+
+.legend {
+    list-style-type: none;
+    display: inline-block;
+}
+
+.legend li {
+    display: inline;
+    margin-right: 10px;
+    width: 300px;
+}
+
+.legend span {
+    border: 1px solid black;
+    display: inline-block;
+    width: 50px;
+    height: 2px;
+    margin-right: 2px;
+    margin-bottom:4px;
+}
+
+.increase_10 {
+    background-color: #15c418;
+}
+
+.no_change {
+    background-color: #8d9093;
+}
+
+.decrease_10 {
+    background-color: #af2f0c;
 }
 
 .slope {
     display: inline-block;
     width: 100%;
-    padding-top: 20px;
+    padding-top: 0;
 }
 
 text.labels {
-    font-size: 11px;
-    fill: #ce2b2b;
+    font-size: 9.5px;
+    fill: #990000;
 }
 
 text.s-title, text.m-title, text.e-title {
-    fill: #7AC143;
+    fill: #36384C;
     letter-spacing: 2px;
     font-size: 11px;
     margin-bottom: 10px;
