@@ -13,9 +13,9 @@ The Sustainable Development Solutions Network (SDSN) has created global happines
         * Change in happiness: Slope
         * Major change in happiness: Color
 
-    3. Layout: The Slopegraph has three vertical invisible lines spaced evenly apart horizontally representing the three years (2015, 2016, 2017). Each country is represented by it's name next to each of the outside lines. The vertical positions of the countries are determined by their Happiness Score. The highest Happiness Score is at the top and each score is displayed next to the country's name. Each country's Happiness score is connected with a line between the three years. This line forms the slope that encodes change in happiness. Countries that experienced an increase in happiness of more than 10% have green colored slopes and countries with a decrease in happiness of more than 10% have red colored slopes. This is shown in a legend at the top of the page before the visualization.
+    3. Layout: The Slopegraph has three vertical invisible lines spaced evenly apart horizontally representing the three years (2015, 2016, 2017). Each country is represented by it's name next to each of the outside lines. The vertical positions of the countries are determined by their Happiness Score. The highest Happiness Score is at the top and each score is displayed next to the country's name. Each country's Happiness score is connected with a line between the three years. This line forms the slope that encodes change in happiness. Countries that experienced an increase in happiness of more than 10% have green colored lines and countries with a decrease in happiness of more than 10% have red colored lines. This is shown in a legend at the top of the page before the visualization.
 
-    The user can toggle on/off specific countries by clicking named buttons at the top of the page or hovering on the country's slope. The user can also toggle off the year 2016 to make direct comparisons between 2015 and 2017.
+    The user can toggle on/off specific countries by clicking named buttons at the top of the page or hovering on the country's line. The user can also toggle off the year 2016 to make direct comparisons between 2015 and 2017.
 
 * Feedback
     * Feedback #1
@@ -24,6 +24,12 @@ The Sustainable Development Solutions Network (SDSN) has created global happines
         + Increase font size and line thickness of selected country. _Fixed_
         + Deselect countries after mouse is moved away from the line or label. _Fixed_
         + Add a short description at the top of the page introducing the visualization and describing the filtering options. _Fixed_
+    * Feedback #2
+        + Move the legend below the Country selection buttons. _Fixed_
+        + Use different colors for Country selection buttons and Country labels because they are similar to the legend. _Fixed_
+        + Further decrease opacity of unselected Country labels and lines. _Fixed_
+        + Make the instructions clearer. Start with instructions for selecting Country rather than year in the top description. _Fixed_
+        + "It's frustrating when I click the button of a country and then everything resets when I move my mouse down towards the lines." _This was being caused by a buffer region at the top that reset all selections on a mouseover event. A visible reset button was added instead of the buffer zone._
 
 
 * Resources

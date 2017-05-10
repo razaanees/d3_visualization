@@ -1,5 +1,5 @@
 body {
-    background: #E9DCCD;
+    background: #FFE9C0;
 }
 
 h1 {
@@ -8,6 +8,7 @@ h1 {
     margin-bottom: 0;
     color: black;
     margin-top: 20px;
+    text-align: center;
 }
 
 header {
@@ -15,9 +16,9 @@ header {
     padding-bottom: 2px;
     padding-left: 0.4em;
     border-radius: 15%;
-    border-top: solid 10px #36384C;
+    border-top: solid 10px #5B6D8F;
     margin-top: 0;
-    background: #E9DCCD;
+    background: #FFE9C0;
 }
 
 div.description {
@@ -25,6 +26,7 @@ div.description {
     font-size: 12px;
     margin-bottom: 1em;
     border-bottom: solid 2px #36364C;
+    text-align: justify;
 }
 
 #country-filter ul, #year-filter ul {
@@ -33,7 +35,7 @@ div.description {
     letter-spacing: 1px;
     list-style: none;
     padding: 0;
-    margin: 10px 0 10px 0;
+    margin: 10px 0 5px 0;
     text-align: justify;
 }
 
@@ -41,18 +43,31 @@ div.description {
     display: inline-block;
     padding: 1px 8px;
     margin-right: 1px;
-    background:#C0D9AF;
+    background:#B8CBED;
     cursor: pointer;
     position: relative;
     margin-bottom: 1px;
 }
 
-.buffer {
-    width: auto;
-    height: 10px;
-    background: #E9DCCD;
+.reset {
+    width: 35px;
+    height: auto;
+    background: #D6B881;
     padding: 0px;
-    margin: 0px;
+    margin-top: 10px;
+    cursor: pointer;
+}
+
+.reset p {
+    color: #36384C;
+    font-size: 12px;
+    padding: 2px
+}
+
+svg {
+    position: relative;
+    left: 50%;
+    margin-left: -525px;
 }
 
 line {
@@ -62,6 +77,7 @@ line {
 .legend {
     list-style-type: none;
     display: inline-block;
+    margin-top: 10px;
 }
 
 .legend li {
@@ -99,7 +115,7 @@ line {
 
 text.labels {
     font-size: 9.5px;
-    fill: #990000;
+    fill: #B8CBED;
 }
 
 text.s-title, text.m-title, text.e-title {

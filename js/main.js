@@ -93,7 +93,7 @@ var slopey = function() {
             // red stroke if happiness score decreased by more than 10%
             stroke: function(d) {
                 if (d[keyValues[n+1]] > d[keyValues[n]]*1.1) {
-                    return "#15c418";
+                    return "#00802b";
                 } else if (d[keyValues[n+1]] < d[keyValues[n]]/1.1) {
                     return "#af2f0c";
                 } else {
@@ -114,7 +114,7 @@ var slopey = function() {
             .enter()
             .append('text')
             .attr({
-                class: function(d,i) {return 'labels l-labels elm lab-'+i},
+                class: function(d,i) {return 'labels l-labels lab-'+i},
                 x: margin.left - 3,
                 y: function (d) {return yScale(d[keyValues[0]])+4;}
             })
@@ -122,6 +122,7 @@ var slopey = function() {
                 return d[keyName] + ' ' + format(d[keyValues[0]]);
             })
             .style('text-anchor', 'end')
+            .style('opacity', 0.5)
             .on('mouseover', dispatch._hover)
             .on('mouseout', dispatch._moveaway);
 
@@ -132,7 +133,7 @@ var slopey = function() {
                 x: margin.left - 3,
                 y: margin.top/2 - 4
             })
-            .text(keyValues[0] + "↓")
+            .text(keyValues[0] + " ↓")
             .style('text-anchor', 'end');
     }
 
@@ -144,12 +145,13 @@ var slopey = function() {
                 .enter()
                 .append('text')
                 .attr({
-                    class: function(d,i) {return 'labels m-labels-' + n +' elm'+' lab-'+i;},
+                    class: function(d,i) {return 'labels m-labels-' + n +' lab-'+i;},
                     x: ((w/sets)*(n+1)) + 15,
                     y: function(d) {return yScale(d[keyValues[n+1]]) + 4;}
                 })
                 .text(function(d) {return format(d[keyValues[n+1]]);})
                 .style('text-anchor', 'end')
+                .style('opacity', 0.5)
                 .on('mouseover', dispatch._hover)
                 .on('mouseout', dispatch._moveaway);
 
@@ -161,7 +163,7 @@ var slopey = function() {
                 y: margin.top/2 - 4
             })
             .text(function(d) {
-                return [keyValues[n+1]] + "↓";
+                return [keyValues[n+1]] + " ↓";
             })
             .style('text-anchor', 'end');
         }
@@ -177,7 +179,7 @@ var slopey = function() {
             .append('text')
             .attr({
                 class: function(d,i) {
-                    return "labels e-labels- elm lab-" + i;
+                    return "labels e-labels- lab-" + i;
                 },
                 x: w-margin.right + 4,
                 y: function(d) {return yScale(d[keyValues[e]]);}
@@ -186,6 +188,7 @@ var slopey = function() {
                 return d[keyName] + " " + format(d[keyValues[e]]);
             })
             .style('text-anchor', 'start')
+            .style('opacity', 0.5)
             .on('mouseover', dispatch._hover)
             .on('mouseout', dispatch._moveaway);
 
