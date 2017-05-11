@@ -97,6 +97,7 @@ line {
 
 .increase_10 {
     background-color: #15c418;
+    cursor: pointer;
 }
 
 .no_change {
@@ -105,6 +106,7 @@ line {
 
 .decrease_10 {
     background-color: #af2f0c;
+    cursor: pointer;
 }
 
 .slope {

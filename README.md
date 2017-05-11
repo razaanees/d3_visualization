@@ -1,10 +1,16 @@
 # d3_visualization
 
 * Summary
-The Sustainable Development Solutions Network (SDSN) has created global happiness reports for the past several years. These reports allot happiness scores to 148 countries based on six factors: GDP per capita, social support and mobility, health, trust in government, freedom, and generosity. This visualization shows the change in these scores from the year 2015 to 2017 and highlights the countries that experienced a large change in their measured happiness.
+The Sustainable Development Solutions Network (SDSN) has created global happiness reports for the past several years. These reports allot happiness scores to 148 countries based on six factors: GDP per capita, social support and mobility, health, trust in government, freedom, and generosity. This visualization shows the change in these scores from the year 2015 to 2017 and highlights the countries that experienced a large change in their measured happiness. It also shows that the happiest countries are stable.
 
 * Design
     1. Chart type: After EDA of the world happiness data, I noticed that the happiness scores for most countries remained relatively the same; however, a few countries experienced large changes in happiness. I decided to show the change in happiness (Happiness Score) of all of the countries from 2015 to 2017 and highlight the countries that experienced that biggest changes. A simple and effective way of doing this is using Edward Tufte's Slopegraph.
+
+    I made the legend interactive after reading all of the feedback to put a
+    greater emphasis on countries that experienced large changes in happiness.
+    Users can click the colored line in the legend to highlight corresponding
+    countries in the slopegraph. The highlight also shows that the happiest
+    countries remained stable and did not experience large increases or decreases in happiness.
 
     2. Visual Encodings:
         * Country: Shape (one line for each country)
@@ -19,17 +25,19 @@ The Sustainable Development Solutions Network (SDSN) has created global happines
 
 * Feedback
     * Feedback #1
-        + Be able to select more than one country at a time. _Fixed_
-        + Names of a few countries do not completely fit on screen. _Fixed_
+        + Be able to select more than one country at a time. _Made state.highlight into an array instead of a bool_
+        + Names of a few countries do not completely fit on screen. _Adjusted the dimensions of the slopegraph_
         + Increase font size and line thickness of selected country. _Fixed_
-        + Deselect countries after mouse is moved away from the line or label. _Fixed_
-        + Add a short description at the top of the page introducing the visualization and describing the filtering options. _Fixed_
+        + Deselect countries after mouse is moved away from the line or label. _Add a "mouseout" event to the label to reset the graph_
+        + Add a short description at the top of the page introducing the visualization and describing the filtering options. _Implemented_
     * Feedback #2
         + Move the legend below the Country selection buttons. _Fixed_
-        + Use different colors for Country selection buttons and Country labels because they are similar to the legend. _Fixed_
-        + Further decrease opacity of unselected Country labels and lines. _Fixed_
-        + Make the instructions clearer. Start with instructions for selecting Country rather than year in the top description. _Fixed_
+        + Use different colors for Country selection buttons and Country labels because they are similar to the legend. _Switched color scheme to yelloe and blue to avoid confusion with the legend colors_
+        + Further decrease opacity of unselected Country labels and lines. _Decreased opacity of unselected lines from 0.3 to 0.2_
+        + Make the instructions clearer. Start with instructions for selecting country rather than year in the top description. _Fixed_
         + "It's frustrating when I click the button of a country and then everything resets when I move my mouse down towards the lines." _This was being caused by a buffer region at the top that reset all selections on a mouseover event. A visible reset button was added instead of the buffer zone._
+    * Feedback #3
+        + Make the legend click-able (ie. all green lines should be highlighted if a user clicks on the green line in the legend) _Identified the colored lines by adding keywords into their class. Allowed interactive legend by highlighting those colored lines when the legend is clicked_
 
 
 * Resources

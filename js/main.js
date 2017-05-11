@@ -1,11 +1,9 @@
 // Multiple slogegraph chart code
 
-//function js() {
-    //'use strict';
-
 var slopey = function() {
     "use strict";
 
+    // dimensionality of slopegraph
     var w = 200, // width
         h = 500,
         margin = {top: 40, bottom: 40, left: 80, right: 80},
@@ -16,14 +14,16 @@ var slopey = function() {
         format = d3.format(''),
         sets;
 
+    // map event variables to be returned
     var dispatch = d3.dispatch('_hover', "_moveaway");
 
     var svg, yScale;
 
+    // values to be returned as d3 block for rendering slopegraph
     function exports(_selection) {
         _selection.each(function(data) {
 
-            // format and clean data
+            // get max and min data values
             var keyExtent = d3.extent(data, function(d){
                 return d["2017"];
             });
@@ -62,7 +62,7 @@ var slopey = function() {
         }
     }
 
-    // connecting lines
+    // render connecting lines
     function lines (data, n) {
 
         var lines = svg
@@ -101,12 +101,19 @@ var slopey = function() {
                 }
             },
             'stroke-width': 1,
-            class: function(d, i) {return 'elm s-line-' + n + ' sel-' + i;}
-        })
+            class: function(d, i) {
+                if (d[keyValues[n+1]] > d[keyValues[n]]*1.1) {
+                    return 'elm s-line- green ' + n + ' sel-' + i;
+                } else if (d[keyValues[n+1]] < d[keyValues[n]]/1.1) {
+                    return 'elm s-line- red ' + n + ' sel-' + i;
+                }
+                else {return 'elm s-line-' + n + ' sel-' + i;}
+        }})
+        // map "mouseover" event to an attribute of dispatch
         .on('mouseover', dispatch._hover);
     }
 
-    // start labels to be applied to the very left of chart
+    // start labels to be applied at the beginning of chart
     function startLabels(data) {
 
         var startLabels = svg.selectAll('.l-labels')
@@ -126,7 +133,7 @@ var slopey = function() {
             .on('mouseover', dispatch._hover)
             .on('mouseout', dispatch._moveaway);
 
-        // year title
+        // starting year title
         svg.append('text')
             .attr({
                 class: 's-title',
@@ -205,6 +212,7 @@ var slopey = function() {
             .style("text-anchor", "start")
     }
 
+    // allow chart dimensions to be altered in "index.html" or use default value
     exports.w = function(value) {
         if(!arguments.length) return w;
         w = value;
