@@ -32,12 +32,18 @@ The Sustainable Development Solutions Network (SDSN) has created global happines
         + Add a short description at the top of the page introducing the visualization and describing the filtering options. _Implemented_
     * Feedback #2
         + Move the legend below the Country selection buttons. _Fixed_
-        + Use different colors for Country selection buttons and Country labels because they are similar to the legend. _Switched color scheme to yelloe and blue to avoid confusion with the legend colors_
+        + Use different colors for Country selection buttons and Country labels because they are similar to the legend. _Switched color scheme to yellow and blue to avoid confusion with the legend colors_
         + Further decrease opacity of unselected Country labels and lines. _Decreased opacity of unselected lines from 0.3 to 0.2_
         + Make the instructions clearer. Start with instructions for selecting country rather than year in the top description. _Fixed_
         + "It's frustrating when I click the button of a country and then everything resets when I move my mouse down towards the lines." _This was being caused by a buffer region at the top that reset all selections on a mouseover event. A visible reset button was added instead of the buffer zone._
     * Feedback #3
         + Make the legend click-able (ie. all green lines should be highlighted if a user clicks on the green line in the legend) _Identified the colored lines by adding keywords into their class. Allowed interactive legend by highlighting those colored lines when the legend is clicked_
+    * Feedback from Udacity reviewer
+        + Put js code currently in "index.html" into another separate js file. _Implemented_
+        + Change color of "year" filtering buttons. _Implemented_
+        + Group countries by continents. _Tried grouping countries by continent in EDA but it created too much clutter and was not clear when large continents such as Asia were selected. Also got the impression that users are more interested in finding out about their own country or neighboring country than continent._
+        + Let users decide the significance level of happiness increase or decrease. _Added a slider that adjusts the happiness increase/decrease percentage as chosen by the user_
+        + Add tooltip that displays information when line is hovered over. _Added tooltip that displays country name and percentage change in happiness score._
 
 
 * Resources
@@ -45,5 +51,6 @@ The Sustainable Development Solutions Network (SDSN) has created global happines
     * [2015 - 2016 World happiness data](https://www.kaggle.com/unsdsn/world-happiness)
     * [Slopegraph - Sundar's Block](https://bl.ocks.org/eesur/ee8d0ab88229d0e07f7f)
     * [Stack Overflow](https://www.stackoverflow.com)
-    * [Udacity Data Analyst ND](https:www.udacity.com)
+    * [Udacity Data Analyst ND](https://www.udacity.com)
     * [Reusable D3 syntax](https://medium.freecodecamp.com/a-gentle-introduction-to-d3-how-to-build-a-reusable-bubble-chart-9106dc4f6c46)
+    * [Sliders in D3](http://www.d3noob.org/2014/04/using-html-inputs-with-d3js.html)

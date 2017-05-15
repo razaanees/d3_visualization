@@ -1,267 +1,344 @@
-// Multiple slogegraph chart code
+// implement the slopegraph for this particular dataset of happiness scores
 
-var slopey = function() {
-    "use strict";
+function main() {
+    'use strict';
 
-    // dimensionality of slopegraph
-    var w = 200, // width
-        h = 500,
-        margin = {top: 40, bottom: 40, left: 80, right: 80},
-        gutter = 50,
-        strokeColour = '#8d9093',
-        keyValues = [],
-        keyName = '',
-        format = d3.format(''),
-        sets;
+    // width of slopegraph
+    var width = 380;
+    // years to be shown from the data
+    var keyValues = ['2015', '2016', '2017'];
+    // implement a slider to allow users to select the percentage of happiness
+    // increase or decrease
+    var slider;
+    // initial value of the slider
+    var percentage = 10;
+    // store tooltip
+    var tooltip;
+    // store chart
+    var slopegraph;
+    // track user interaction
+    var state = {
+        // pass the years to display from the data
+        keys: keyValues,
+        // track filtered years
+        filter: [],
+        // toggle specific countries
+        navToggle: [],
+        // track line selection
+        highlight: [],
+    };
+    // for parsing percentage changes in happiness scores
+    var formatInt = d3.format(".1%");
 
-    // map event variables to be returned
-    var dispatch = d3.dispatch('_hover', "_moveaway");
+    // track lines of countries with happiness increase/decrease > chosen amount
+    var special_lines = {
+        red: [],
+        green: []
+    }
+    // find all the red and green lines corresponding to decreases/
+    // increases in happiness
+    function find_lines() {
+        // reset line indices for reuse
+        special_lines.green = [];
+        special_lines.red = [];
 
-    var svg, yScale;
+        d3.selectAll('line')
+            .each(function(d, i) {
+                // find each line that has class of "green" or "red"
+                // these classes were added during rendering in "slopey.js"
+                if (d3.select(this).classed("green")) {
+                    var clas = d3.select(this).attr("class").split("-");
+                    // take last element in array of class string to identify
+                    // the country number
+                    special_lines.green.push(clas[clas.length-1]);
+                } else if(d3.select(this).classed("red")) {
+                    var clas = d3.select(this).attr("class").split("-");
+                    special_lines.red.push(clas[clas.length-1]);
+                }
+            })
+    }
 
-    // values to be returned as d3 block for rendering slopegraph
-    function exports(_selection) {
-        _selection.each(function(data) {
+    // create slider for choosing happiness change rate and update with interaction
+    function happinessSlider(data) {
+        slider = d3.select("div#legend")
+            .append("input")
+            .attr("type", "range")
+            .attr("min", "0")
+            .attr("max", "30")
+            .attr("step", "2")
+            .attr("id", "percentage");
 
-            // get max and min data values
-            var keyExtent = d3.extent(data, function(d){
-                return d["2017"];
+        update(percentage);
+
+        d3.select("#percentage")
+            .on("input", function() {
+                update(+this.value);
+                percentage = +this.value;
+                render(data, keyValues, percentage);
+                find_lines();
             });
-            // adjust screen width for number of sets
-            w = w * keyValues.length;
-            // get number of sets
-            sets = keyValues.length - 1;
-            // use same scale for all sides
-            yScale = d3.scale.linear()
-                .domain(keyExtent)
-                .range([h-margin.top, margin.bottom+8]);
+    }
 
-            // reset graph
-            d3.select(this).select('svg').remove();
+    // for updating happiness slider
+    function update(value) {
+        slider.attr("value", value);
 
-            svg = d3.select(this)
-                .append('svg')
-                .attr('width', w)
-                .attr('height', h);
+        d3.selectAll("#perc-value")
+            .attr("value", value + "%");
+    }
 
-            render(data,0);
+    // filter based on user interaction
+    function filterYear(data) {
+        // initialize filter array as false which means not filtered out
+        keyValues.forEach(function() {
+            state["filter"].push(false);
         });
+        d3.select('nav#year-filter').append('ul')
+            .selectAll('li')
+            .data(keyValues)
+            .enter()
+            .append('li')
+            .on('click', function(d, i) {
+                // if an inactive year is clicked
+                if (state.filter[i]) {
+                    state.filter[i] = false;
+                    d3.select(this).style('opacity', 1);
+                    // add year to array
+                    state.keys.push(d);
+                    // keep array in chronological order
+                    state.keys.sort();
+                    // render with inclusion of the clicked year
+                    render(data, state.keys, percentage);
+                }
+                // Disable the clicked year if
+                // at least two other years are active
+                else if (!state.filter[i] && state.keys.length > 2) {
+                    state.filter[i] = true;
+                    d3.select(this).style('opacity', 0.3);
+                    state.keys.splice(i, 1);
+                    state.keys.sort();
+                    render(data, state.keys, percentage);
+                }
+            })
+            .text(function(d) {return d;});
     }
 
-    // apply each set of scores and start/end labels at the end
-    function render(data, n) {
-        if (n < keyValues.length-1) {
-            lines(data, n);
-            middleLabels(data, n);
-            return render(data, n+1);
-        }
-        else {
-            startLabels(data, n);
-            endLabels(data, n);
-            return n;
-        }
-    }
+    // highlight country buttons based on user interaction
+    function filterCountry(data) {
+        data.forEach(function(n) {
+            state.navToggle.push(false);
+        });
 
-    // render connecting lines
-    function lines (data, n) {
-
-        var lines = svg
-            .selectAll('.s-line-'+n)
-            .data(data)
-            .enter().append('line');
-
-        lines.attr({
-            x1: function () {
-                if (n===0) {
-                    return margin.left;
-                }
-                else {
-                    return ((w/sets)*n) + margin.left/2;
-                }
-            },
-            y1: function(d) {return yScale(d[keyValues[n]]);},
-            x2: function () {
-                if (n === sets-1) {
-                    return w - margin.right;
-                }
-                else {
-                    return ((w/sets)*(n+1)) - gutter;
-                }
-            },
-            y2: function(d) {return yScale(d[keyValues[n+1]]);},
-            // green stroke if happiness score increased by more than 10%
-            // red stroke if happiness score decreased by more than 10%
-            stroke: function(d) {
-                if (d[keyValues[n+1]] > d[keyValues[n]]*1.1) {
-                    return "#00802b";
-                } else if (d[keyValues[n+1]] < d[keyValues[n]]/1.1) {
-                    return "#af2f0c";
-                } else {
-                    return strokeColour;
-                }
-            },
-            'stroke-width': 1,
-            class: function(d, i) {
-                if (d[keyValues[n+1]] > d[keyValues[n]]*1.1) {
-                    return 'elm s-line- green ' + n + ' sel-' + i;
-                } else if (d[keyValues[n+1]] < d[keyValues[n]]/1.1) {
-                    return 'elm s-line- red ' + n + ' sel-' + i;
-                }
-                else {return 'elm s-line-' + n + ' sel-' + i;}
-        }})
-        // map "mouseover" event to an attribute of dispatch
-        .on('mouseover', dispatch._hover);
-    }
-
-    // start labels to be applied at the beginning of chart
-    function startLabels(data) {
-
-        var startLabels = svg.selectAll('.l-labels')
+        d3.select('nav#country-filter')
+            .append('ul')
+            .selectAll('li')
             .data(data)
             .enter()
-            .append('text')
-            .attr({
-                class: function(d,i) {return 'labels l-labels lab-'+i},
-                x: margin.left - 3,
-                y: function (d) {return yScale(d[keyValues[0]])+4;}
+            .append('li')
+            .attr('class', function(d, i) {return 'navAlt li-'+i;})
+            .on('click', function(d, i) {
+                // if the country is already part of the highlighted set
+                if (state.navToggle[i]) {
+                    state.navToggle[i] = false;
+                    // the country's id must be filtered out of the highlight
+                    // array so all other selections can be rendered
+                    var index = state.highlight.indexOf(i)
+                    state.highlight.splice(index, 1);
+                    // graph will reset if at least one country isn't selected
+                    if (state.highlight.length === 0) {
+                        resetSelection();
+                    } else {
+                        // highlight the line, label, and country button of
+                        // all remaining selected countries
+                        highlightLine(state.highlight);
+                        highlightNav(state.highlight);
+                        highlightLabel(state.highlight);
+                    }
+                }
+                // if the country is not part of the highlighted set when
+                // its button is clicked
+                else if (!state.navToggle[i]) {
+                    state.navToggle[i] = true;
+                    if (state.highlight.indexOf(i) === -1) {
+                        state.highlight.push(i);
+                    }
+                    highlightLine(state.highlight);
+                    highlightNav(state.highlight);
+                    highlightLabel(state.highlight);
+                }
             })
-            .text(function (d) {
-                return d[keyName] + ' ' + format(d[keyValues[0]]);
-            })
-            .style('text-anchor', 'end')
-            .style('opacity', 0.5)
-            .on('mouseover', dispatch._hover)
-            .on('mouseout', dispatch._moveaway);
-
-        // starting year title
-        svg.append('text')
-            .attr({
-                class: 's-title',
-                x: margin.left - 3,
-                y: margin.top/2 - 4
-            })
-            .text(keyValues[0] + " ↓")
-            .style('text-anchor', 'end');
+            .text(function(d) {return d["country"];});
     }
 
-    function middleLabels(data, n) {
+    // render the slopegraph
+    function render(data, keys, perc) {
+        resetSelection();
+        // create chart
+        // inherit all properties from the slopegraph d3 block created in
+        // "main.js"
+        slopegraph = slopey()
+            .w(width)
 
-        if (n !== sets-1) {
-            var middleLabels = svg.selectAll('.m-labels-' + n)
-                .data(data)
-                .enter()
-                .append('text')
-                .attr({
-                    class: function(d,i) {return 'labels m-labels-' + n +' lab-'+i;},
-                    x: ((w/sets)*(n+1)) + 15,
-                    y: function(d) {return yScale(d[keyValues[n+1]]) + 4;}
-                })
-                .text(function(d) {return format(d[keyValues[n+1]]);})
-                .style('text-anchor', 'end')
-                .style('opacity', 0.5)
-                .on('mouseover', dispatch._hover)
-                .on('mouseout', dispatch._moveaway);
+            .margin({top: 30, bottom: 20, left: 140, right: 140})
+            .gutter(25)
+            .keyName('country')
+            .keyValues(keys)
+            .strokeColour('#8d9093')
+            .percentage(perc)
+            .on('_hover', function(d, i) {
+                // highlight only the country currently hovered over
+                state.highlight = [i];
+                // reset country toggle so country buttons can be selected after
+                // other countries have been hovered over
+                state.navToggle.forEach(function(d, i) {
+                    state.navToggle[i] = false;
+                });
+                // highlight line based on hovered cursor
+                highlightLine(state.highlight);
+                // highlight navigation pane related to highlighted line
+                highlightNav(state.highlight);
+                highlightLabel(state.highlight);
+                // show tooltip on mousehover
+                tooltipOn(d3.event.pageX, d3.event.pageY, d);
+            })
+            .on('_moveaway',function() {
+                tooltip.transition()
+                        .duration(200)
+                        .style("opacity", 0);
+            });
 
-        // year title at the top of the labels
-        svg.append('text')
-            .attr({
-                class: 'm-title',
-                x: ((w/sets)*(n+1)) +15,
-                y: margin.top/2 - 4
-            })
-            .text(function(d) {
-                return [keyValues[n+1]] + " ↓";
-            })
-            .style('text-anchor', 'end');
+        // apply chart
+        d3.select('section.slope')
+            .datum(data)
+            .call(slopegraph);
+
+        // ensure highlight is maintained when graph is updated
+        if (state.highlight.length > 0) {
+            d3.selectAll('.elm').style('opacity', 0.2)
+            .style('stroke-width', 1);
+            highlightNav(state.highlight);
+            highlightLabel(state.highlight);
+            highlightLine(state.highlight);
         }
     }
 
-    function endLabels(data) {
+    // highlight all selected lines in the highlight array
+    function highlightLine(highlight) {
+        d3.selectAll('.elm')
+        .transition()
+        .style('opacity', 0.1)
+        .style('stroke-width', 1);
 
-        // get the last year in the data list-style
-        var e = keyValues.length - 1;
-
-        var endLabels = svg.selectAll('.e-labels-')
-            .data(data).enter()
-            .append('text')
-            .attr({
-                class: function(d,i) {
-                    return "labels e-labels- lab-" + i;
-                },
-                x: w-margin.right + 4,
-                y: function(d) {return yScale(d[keyValues[e]]);}
-            })
-            .text(function(d) {
-                return d[keyName] + " " + format(d[keyValues[e]]);
-            })
-            .style('text-anchor', 'start')
-            .style('opacity', 0.5)
-            .on('mouseover', dispatch._hover)
-            .on('mouseout', dispatch._moveaway);
-
-        // year title on top
-        svg.append('text')
-            .attr({
-                class: 'e-title',
-                x: w-margin.right + 4,
-                y: margin.top/2 - 4
-            })
-            .text(function (d){
-                return keyValues[e] + " ↓";
-            })
-            .style("text-anchor", "start")
+        var n = highlight.length;
+        for (var i = 0; i < n; i++) {
+            d3.selectAll('.sel-'+highlight[i]).transition()
+            .style('opacity', 1).style('stroke-width', 3);
+        }
     }
 
-    // allow chart dimensions to be altered in "index.html" or use default value
-    exports.w = function(value) {
-        if(!arguments.length) return w;
-        w = value;
-        return this;
+    // highlight all countries in navigation pane in the highlight array
+    function highlightNav(highlight) {
+        d3.selectAll('.navAlt').transition().style('opacity', 0.2);
+
+        var n = highlight.length;
+        for (var i = 0; i < n; i++) {
+            d3.selectAll('.li-' + highlight[i]).transition()
+            .style('opacity', 1);
+        }
     }
 
-    exports.h = function(value) {
-        if(!arguments.length) return h;
-        h = value;
-        return this;
+    // enlarge labels of all selected countries in highlight array
+    function highlightLabel(highlight) {
+        d3.selectAll('.labels').transition().style('opacity', 0.2)
+        .style('font-size', "9.5px").style('fill', '#B8CBED');
+
+        highlight.forEach(function(d) {
+            d3.selectAll('.lab-'+d).transition().style('opacity', 1)
+            .style('font-size', "13px")
+            .style('fill', '#5B6D8F')
+        })
     }
 
-    exports.margin = function(value) {
-        if(!arguments.length) return margin;
-        margin = value;
-        return this;
+    // reset the chart and clear any selections
+    function resetSelection() {
+        d3.selectAll('.elm').transition().style('opacity', 1)
+        .style('stroke-width', 1);
+        d3.selectAll('.navAlt').transition().style('opacity', 1);
+        d3.selectAll('.labels').transition().style('font-size', "9.5px")
+        .style("fill", "#B8CBED").style("opacity", 0.5);
     }
 
-    exports.gutter = function(value) {
-        if(!arguments.length) return gutter;
-        gutter = value;
-        return this;
+    // render tooltip when mouse hovered over line
+    function tooltipOn(x, y, d) {
+        // change tooltip information depending on which line is hovered over
+        var percent_change;
+        var information = "";
+        for(var n=0; n < state.keys.length-1; n++){
+            percent_change = state.keys[n]+": " + formatInt((d[state.keys[n+1]] - d[state.keys[n]])/d[state.keys[n]]);
+            // append information for multiple years
+            information += (percent_change + "<br/>");
+        }
+
+        tooltip.transition()
+                .duration(100)
+                .style("opacity", 0.9);
+        tooltip.html(d.country + "<br/>" + information)
+                .style("left", (x+5) + "px")
+                .style("top", (y-45) + "px");
     }
 
-    exports.format = function(value) {
-        if(!arguments.length) return format;
-        format = value;
-        return this;
+    // show all large happiness increases/decreases by clicking the legend
+    function highlightSpecialLines() {
+        // identify all lines
+        find_lines();
+
+        d3.select('.increase')
+        .on('click', function() {
+            highlightNav(special_lines.green);
+            highlightLine(special_lines.green);
+            highlightLabel(special_lines.green);
+        })
+
+        d3.select('.decrease')
+        .on('click', function() {
+            highlightNav(special_lines.red);
+            highlightLine(special_lines.red);
+            highlightLabel(special_lines.red);
+        })
     }
 
-    exports.strokeColour = function(value) {
-        if(!arguments.length) return strokeColour;
-        strokeColour = value;
-        return this;
+    // give functionality to reset button
+    function resetButton() {
+        d3.select("div.reset")
+            .append("p")
+            .text("Reset")
+            .on('click', function() {
+                resetSelection();
+                state.highlight = [];
+            });
     }
 
-    exports.keyValues = function(value) {
-        if(!arguments.length) return keyValues;
-        keyValues = value;
-        return this;
-    }
-
-    exports.keyName = function(value) {
-        if(!arguments.length) return keyName;
-        keyName = value;
-        return this;
-    }
-
-    d3.rebind(exports, dispatch, 'on');
-    return exports;
-
+    d3.json("data/data.json", function(data) {
+        data.forEach(function(d) {
+        d["2015"] = +d["2015"];
+        d["2016"] = +d["2016"];
+        d["2017"] = +d["2017"];
+    });
+        // initial render of chart
+        render(data, keyValues, percentage);
+        // enable filtering of countries
+        filterCountry(data);
+        // filtering options for years
+        filterYear(data);
+        // enable the reset button functionality
+        resetButton();
+        // highlight lines for countries with specified happiness change
+        highlightSpecialLines();
+        // enable happiness level slider
+        happinessSlider(data);
+        // initiate the tooltip
+        tooltip = d3.select("body").append("div")
+                    .attr("class", "tooltip")
+                    .style("opacity", 0);
+    })
 };

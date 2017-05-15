@@ -9,13 +9,16 @@
 
     <link rel="stylesheet" href="css/main.css">
     <script type="text/javascript" src="https://d3js.org/d3.v3.min.js"></script>
+    <!-- ****************** import d3 code ****************** -->
+    <!-- main.js and slopey.js script -->
+    <!-- slopy.js is reusable slopechart coded in d3 -->
+    <script src="js/slopey.js"></script>
+    <script src="js/main.js" onload=main()></script>
 </head>
 
-<body onload="main()">
-
+<body>
     <header>
-        <h1>Changes in World Happiness</h1>
-
+        <h1>Stability Breeds Happiness</h1>
         <div class="description">
             <p>
                 The Sustainable Development Solutions Network (SDSN) assigns
@@ -23,15 +26,24 @@
                 support, Generosity, Freedom, Trust in Government, and Health. The
                 Slopegraph below shows how these Happiness Scores have changed from
                 2015 to 2017 for all tracked countries.<br><br>
+                The data shows that the happiest countries are the most stable.
+                All of them encountered less than 2% change in happiness from 2015
+                to 2017. The data also shows that few countries have large changes
+                in happiness and those that do can be pinned on current events
+                in the country. For example, Venezuela's happiness score drastically
+                decreased from 2015 to 2017. This can be linked to the economic
+                turmoil and protests currently happening in the country due to
+                decline of oil prices that started in late 2014.<br><br>
                 To begin, select a country from the buttons below or hover over
                 the line of a country in the Slopegraph. Countries can be
                 unselected by clicking on their name again or clicking
                 the "Reset" button. Multiple countries can be selected at the
                 same time. The year 2016 can be filtered by clicking on the "2016" button below.
                 <br>
+                The slider can be adjusted to choose the change in happiness levels.
                 The legend is interactable so line symbols in the legend can be
                 clicked to show all corresponding countries that experienced
-                large increase or decrease in happiness.
+                the chosen increase or decrease in happiness.
 
             </p>
         </div>
@@ -39,294 +51,24 @@
         <!-- store the year and country filtering buttons -->
         <nav id='year-filter'></nav>
         <nav id='country-filter'></nav>
-        <div class="reset"><p>Reset</p></div>
-        <!-- container for the interactive legend -->
-        <ul class="legend">
-            <li><span class="increase_10"></span>Happiness Increase > 10%</li>
-            <li><span class="no_change"></span>No major change</li>
-            <li><span class="decrease_10"></span>Happiness Decrease > 10%</li>
-        </ul>
+        <div class="reset"></div>
+        <!-- container for the interactive legend and percentage slider -->
+        <div id="legend">
+            <ul class="legend">
+                <label for="percentage">
+                    <span class="increase"></span>
+                    Happiness Increase > <input type="text" id="perc-value">
+                </label>
+                <label><span class="no_change"></span>No major change</label>
+                <label for="percentage">
+                    <span class="decrease"></span>
+                    Happiness Decrease > <input type="text" id="perc-value">
+                </label>
+            </ul>
+        </div>
     </header>
 
     <section id='slopegraph' class='slope'></section>
 
-    <!-- ****************** start d3 code ****************** -->
-    <!-- main.js script -->
-    <script src="js/main.js"></script>
-
-    <script>
-    // render slopgraph chart
-
-    function main() {
-        'use strict';
-
-        // load the data
-        var data,
-        // years to be shown from the data
-        keyValues = ['2015', '2016', '2017'];
-
-        // store chart
-        var slopegraph;
-        // track user interaction
-        var state = {
-            // pass the years to display from the data
-            keys: keyValues,
-            // track filtered years
-            filter: [],
-            // toggle specific countries
-            navToggle: [],
-            // track line selection
-            highlight: [],
-        };
-
-        // track lines of countries with happiness increase/decrease > 10%
-        var special_lines = {
-            red: [],
-            green: []
-        }
-
-        d3.json('data/data.json', function(error, dd) {
-            if (error) throw error;
-            dd.forEach(function(d) {
-                d["2015"] = +d["2015"];
-                d["2016"] = +d["2016"];
-                d["2017"] = +d["2017"];
-            });
-            // reference data outside of this initialization
-            data = dd;
-            // initial render of chart
-            render(data, keyValues);
-            // enable filtering of countries
-            filterCountry(data);
-            // filtering options for years
-            filterYear();
-            // identify colored lines
-            find_lines();
-        });
-
-        // find all the red and green lines corresponding to large decreases/
-        // increases in happiness
-        function find_lines() {
-            d3.selectAll('line')
-                .each(function(d, i) {
-                    // find each line that has class of "green" or "red"
-                    // these classes were added during rendering in "main.js"
-                    if (d3.select(this).classed("green")) {
-                        var clas = d3.select(this).attr("class").split("-");
-                        // take last element in array of class string to identify
-                        // the country number
-                        special_lines.green.push(clas[clas.length-1]);
-                    } else if(d3.select(this).classed("red")) {
-                        var clas = d3.select(this).attr("class").split("-");
-                        special_lines.red.push(clas[clas.length-1]);
-                    }
-                })
-        }
-
-        // filter based on user interaction
-        function filterYear() {
-            // initialize filter array as false which means not filtered out
-            keyValues.forEach(function() {
-                state["filter"].push(false);
-            });
-            d3.select('nav#year-filter').append('ul')
-                .selectAll('li')
-                .data(keyValues)
-                .enter()
-                .append('li')
-                .on('click', function(d, i) {
-                    // if an inactive year is clicked
-                    if (state.filter[i]) {
-                        state.filter[i] = false;
-                        d3.select(this).style('opacity', 1);
-                        // add year to array
-                        state.keys.push(d);
-                        // keep array in chronological order
-                        state.keys.sort();
-                        // render with inclusion of the clicked year
-                        render(data, state.keys);
-                    }
-                    // Disable the clicked year if
-                    // at least two other years are active
-                    else if (!state.filter[i] && state.keys.length > 2) {
-                        state.filter[i] = true;
-                        d3.select(this).style('opacity', 0.3);
-                        state.keys.splice(i, 1);
-                        state.keys.sort();
-                        render(data, state.keys);
-                    }
-                })
-                .text(function(d) {return d;});
-        }
-
-        // highlight country buttons based on user interaction
-        function filterCountry(data) {
-            data.forEach(function(n) {
-                state.navToggle.push(false);
-            });
-
-            d3.select('nav#country-filter')
-                .append('ul')
-                .selectAll('li')
-                .data(data)
-                .enter()
-                .append('li')
-                .attr('class', function(d, i) {return 'navAlt li-'+i;})
-                .on('click', function(d, i) {
-                    // if the country is already part of the highlighted set
-                    if (state.navToggle[i]) {
-                        state.navToggle[i] = false;
-                        // the country's id must be filtered out of the highlight
-                        // array so all other selections can be rendered
-                        var index = state.highlight.indexOf(i)
-                        state.highlight.splice(index, 1);
-                        // graph will reset if at least one country isn't selected
-                        if (state.highlight.length === 0) {
-                            resetSelection();
-                        } else {
-                            // highlight the line, label, and country button of
-                            // all remaining selected countries
-                            highlightLine(state.highlight);
-                            highlightNav(state.highlight);
-                            highlightLabel(state.highlight);
-                        }
-                    }
-                    // if the country is not part of the highlighted set when
-                    // its button is clicked
-                    else if (!state.navToggle[i]) {
-                        state.navToggle[i] = true;
-                        if (state.highlight.indexOf(i) === -1) {
-                            state.highlight.push(i);
-                        }
-                        // highlight the selected line
-                        highlightLine(state.highlight);
-                        // highlight the navigation button related to the line
-                        highlightNav(state.highlight);
-                        // highlight the country name and happiness score
-                        highlightLabel(state.highlight);
-                        // reflect highlighted line in state
-                    }
-                })
-                .text(function(d) {return d["country"];});
-        }
-
-        // render the slopegraph
-        function render(data, keys) {
-            resetSelection();
-            // create chart
-
-            // inherit all properties from the slopegraph d3 block created in
-            // "main.js"
-            slopegraph = slopey()
-                .w(380)
-
-                .margin({top: 30, bottom: 20, left: 140, right: 140})
-                .gutter(25)
-                .keyName('country')
-                .keyValues(keys)
-                .on('_hover', function(d, i) {
-                    // highlight only the country currently hovered over
-                    state.highlight = [i];
-                    // reset country toggle so country buttons can be selected after
-                    // other countries have been hovered over
-                    state.navToggle.forEach(function(d, i) {
-                        state.navToggle[i] = false;
-                    });
-                    // highlight line based on hovered cursor
-                    highlightLine(state.highlight);
-                    // highlight navigation pane related to highlighted line
-                    highlightNav(state.highlight);
-                    highlightLabel(state.highlight);
-                })
-                .on('_moveaway',function() {
-                    resetSelection();
-                    state.highlight = [];
-                });
-
-            // apply chart
-            d3.select('section.slope')
-                .datum(data)
-                .call(slopegraph);
-
-            // ensure highlight is maintained when graph is updated
-            if (state.highlight.length > 0) {
-                d3.selectAll('.elm').style('opacity', 0.2)
-                .style('stroke-width', 1);
-                highlightNav(state.highlight);
-                highlightLabel(state.highlight);
-                highlightLine(state.highlight);
-            }
-        }
-
-        // highlight all selected lines in the highlight array
-        function highlightLine(highlight) {
-            d3.selectAll('.elm')
-            .transition()
-            .style('opacity', 0.1)
-            .style('stroke-width', 1);
-
-            var n = highlight.length;
-            for (var i = 0; i < n; i++) {
-                d3.selectAll('.sel-'+highlight[i]).transition()
-                .style('opacity', 1).style('stroke-width', 3);
-            }
-        }
-
-        // highlight all countries in navigation pane in the highlight array
-        function highlightNav(highlight) {
-            d3.selectAll('.navAlt').transition().style('opacity', 0.2);
-
-            var n = highlight.length;
-            for (var i = 0; i < n; i++) {
-                d3.selectAll('.li-' + highlight[i]).transition()
-                .style('opacity', 1);
-            }
-        }
-
-
-        // enlarge labels of all selected countries in highlight array
-        function highlightLabel(highlight) {
-            d3.selectAll('.labels').transition().style('opacity', 0.2)
-            .style('font-size', "9.5px").style('fill', '#B8CBED');
-
-            highlight.forEach(function(d) {
-                d3.selectAll('.lab-'+d).transition().style('opacity', 1)
-                .style('font-size', "13px")
-                .style('fill', '#5B6D8F')
-            })
-        }
-
-        // reset the chart and clear any selections
-        function resetSelection() {
-            d3.selectAll('.elm').transition().style('opacity', 1)
-            .style('stroke-width', 1);
-            d3.selectAll('.navAlt').transition().style('opacity', 1);
-            d3.selectAll('.labels').transition().style('font-size', "9.5px")
-            .style("fill", "#B8CBED").style("opacity", 0.5);
-        }
-
-        // show all large happiness increases/decreases by clicking the legend
-        d3.select('.increase_10')
-        .on('click', function() {
-            highlightNav(special_lines.green);
-            highlightLine(special_lines.green);
-            highlightLabel(special_lines.green);
-        })
-
-        d3.select('.decrease_10')
-        .on('click', function() {
-            highlightNav(special_lines.red);
-            highlightLine(special_lines.red);
-            highlightLabel(special_lines.red);
-        })
-
-        // give functionality to reset button
-        d3.select('.reset')
-        .on('click', function() {
-            resetSelection();
-            state.highlight = [];
-        })
-    };
-    </script>
 </body>
 </html>
