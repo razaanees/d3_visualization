@@ -66,12 +66,15 @@ div.description {
     padding: 0px;
     margin-top: 10px;
     cursor: pointer;
+    opacity: 0.4;
+    text-align: center;
 }
 
-.reset p {
+.reset li {
     color: #36384C;
     font-size: 12px;
-    padding: 2px
+    padding: 2px;
+    list-style: none;
 }
 
 svg {

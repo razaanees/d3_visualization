@@ -26,15 +26,20 @@ function main() {
         navToggle: [],
         // track line selection
         highlight: [],
+        // track happiness line selection in legend
+        green: false,
+        red: false
     };
     // for parsing percentage changes in happiness scores
-    var formatInt = d3.format(".1%");
+    var formatPercent = d3.format(".1%");
 
     // track lines of countries with happiness increase/decrease > chosen amount
     var special_lines = {
         red: [],
         green: []
     }
+    // check if any part of the graph is filtered
+    var filtered = false;
     // find all the red and green lines corresponding to decreases/
     // increases in happiness
     function find_lines() {
@@ -49,13 +54,23 @@ function main() {
                 if (d3.select(this).classed("green")) {
                     var clas = d3.select(this).attr("class").split("-");
                     // take last element in array of class string to identify
-                    // the country number
+                    // the line number
                     special_lines.green.push(clas[clas.length-1]);
                 } else if(d3.select(this).classed("red")) {
                     var clas = d3.select(this).attr("class").split("-");
                     special_lines.red.push(clas[clas.length-1]);
                 }
             })
+    }
+
+    // update filtered variable if any part of the graph is filtered
+    function checkFiltered() {
+        if (state.highlight.length > 0 || state.red || state.green) {
+            filtered = true;
+        }
+        else {
+            filtered = false;
+        }
     }
 
     // create slider for choosing happiness change rate and update with interaction
@@ -100,6 +115,7 @@ function main() {
             .append('li')
             .on('click', function(d, i) {
                 // if an inactive year is clicked
+                checkFiltered();
                 if (state.filter[i]) {
                     state.filter[i] = false;
                     d3.select(this).style('opacity', 1);
@@ -166,6 +182,8 @@ function main() {
                     highlightNav(state.highlight);
                     highlightLabel(state.highlight);
                 }
+                checkFiltered();
+                updateReset();
             })
             .text(function(d) {return d["country"];});
     }
@@ -186,25 +204,34 @@ function main() {
             .strokeColour('#8d9093')
             .percentage(perc)
             .on('_hover', function(d, i) {
-                // highlight only the country currently hovered over
-                state.highlight = [i];
-                // reset country toggle so country buttons can be selected after
-                // other countries have been hovered over
-                state.navToggle.forEach(function(d, i) {
-                    state.navToggle[i] = false;
-                });
-                // highlight line based on hovered cursor
-                highlightLine(state.highlight);
-                // highlight navigation pane related to highlighted line
-                highlightNav(state.highlight);
-                highlightLabel(state.highlight);
-                // show tooltip on mousehover
-                tooltipOn(d3.event.pageX, d3.event.pageY, d);
+                // only display the tooltip if graph is filtered
+                if (filtered) {
+                    tooltipOn(d3.event.pageX, d3.event.pageY, d);
+                } else {
+                    // highlight only the country currently hovered over
+                    state.highlight = [i];
+                    // reset country toggle so country buttons can be selected after
+                    // other countries have been hovered over
+                    state.navToggle.forEach(function(d, i) {
+                        state.navToggle[i] = false;
+                    });
+                    // highlight line based on hovered cursor
+                    highlightLine(state.highlight);
+                    // highlight navigation pane related to highlighted line
+                    highlightNav(state.highlight);
+                    highlightLabel(state.highlight);
+                    // show tooltip on mousehover
+                    tooltipOn(d3.event.pageX, d3.event.pageY, d);
+                }
             })
             .on('_moveaway',function() {
                 tooltip.transition()
-                        .duration(200)
+                        .duration(500)
                         .style("opacity", 0);
+                if (!filtered) {
+                    resetSelection(500);
+                    state.highlight = [];
+                }
             });
 
         // apply chart
@@ -227,7 +254,7 @@ function main() {
         d3.selectAll('.elm')
         .transition()
         .style('opacity', 0.1)
-        .style('stroke-width', 1);
+        .style('stroke-width', 1)
 
         var n = highlight.length;
         for (var i = 0; i < n; i++) {
@@ -259,12 +286,12 @@ function main() {
         })
     }
 
-    // reset the chart and clear any selections
-    function resetSelection() {
-        d3.selectAll('.elm').transition().style('opacity', 1)
+    // reset the chart and clear any selections with default duration of 0
+    function resetSelection(time=0) {
+        d3.selectAll('.elm').transition().duration(time).style('opacity', 1)
         .style('stroke-width', 1);
-        d3.selectAll('.navAlt').transition().style('opacity', 1);
-        d3.selectAll('.labels').transition().style('font-size', "9.5px")
+        d3.selectAll('.navAlt').transition().duration(time).style('opacity', 1);
+        d3.selectAll('.labels').transition().duration(time).style('font-size', "9.5px")
         .style("fill", "#B8CBED").style("opacity", 0.5);
     }
 
@@ -274,7 +301,7 @@ function main() {
         var percent_change;
         var information = "";
         for(var n=0; n < state.keys.length-1; n++){
-            percent_change = state.keys[n]+": " + formatInt((d[state.keys[n+1]] - d[state.keys[n]])/d[state.keys[n]]);
+            percent_change = state.keys[n]+": " + formatPercent((d[state.keys[n+1]] - d[state.keys[n]])/d[state.keys[n]]);
             // append information for multiple years
             information += (percent_change + "<br/>");
         }
@@ -294,28 +321,71 @@ function main() {
 
         d3.select('.increase')
         .on('click', function() {
-            highlightNav(special_lines.green);
-            highlightLine(special_lines.green);
-            highlightLabel(special_lines.green);
+            // if the lines were already filtered out
+            if (state.green) {
+                resetSelection();
+                state.green = false;
+            } else {
+                highlightNav(special_lines.green);
+                highlightLine(special_lines.green);
+                highlightLabel(special_lines.green);
+                state.green = true;
+            }
+            // update graph filter status and reset button
+            checkFiltered();
+            updateReset();
         })
 
         d3.select('.decrease')
         .on('click', function() {
-            highlightNav(special_lines.red);
-            highlightLine(special_lines.red);
-            highlightLabel(special_lines.red);
+            if (state.red) {
+                resetSelection();
+                state.red = false;
+            } else {
+                state.red = true;
+                highlightNav(special_lines.red);
+                highlightLine(special_lines.red);
+                highlightLabel(special_lines.red);
+            }
+            // determine if graph is filtered
+            checkFiltered();
+            updateReset();
         })
     }
 
     // give functionality to reset button
     function resetButton() {
         d3.select("div.reset")
-            .append("p")
+            .append("li")
             .text("Reset")
             .on('click', function() {
                 resetSelection();
                 state.highlight = [];
+                state.green = false;
+                state.red = false;
+                checkFiltered();
+                updateReset();
             });
+    }
+
+    // update the appearance of the reset button depending on whether the graph
+    // has been filtered
+    function updateReset() {
+        d3.select("div.reset")
+            .style("opacity", function() {
+                if (filtered) {
+                    return 1;
+                } else {
+                    return 0.4;
+                }
+            })
+            .style("width", function() {
+                if (filtered) {
+                    return "60px";
+                } else {
+                    return "35px";
+                }
+            })
     }
 
     d3.json("data/data.json", function(data) {

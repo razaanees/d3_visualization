@@ -44,6 +44,11 @@ The Sustainable Development Solutions Network (SDSN) has created global happines
         + Group countries by continents. _Tried grouping countries by continent in EDA but it created too much clutter and was not clear when large continents such as Asia were selected. Also got the impression that users are more interested in finding out about their own country or neighboring country than continent._
         + Let users decide the significance level of happiness increase or decrease. _Added a slider that adjusts the happiness increase/decrease percentage as chosen by the user_
         + Add tooltip that displays information when line is hovered over. _Added tooltip that displays country name and percentage change in happiness score._
+    * Feedback #5
+        + Re-click either of the happiness logos in the legend to un-filter. _Implemented_
+        + Add "mouseout" event to unselect lines that were hovered over. _Added "mouseout" event with duration of 500 to allow for smooth transitions_
+        + Stop lines from resetting when a selection has been made and the mouse is hovered over a line. _The hover will only display the tooltip when a selection has already been made_
+        + Make reset button more prominent when a selection has been made. _Implemented_
 
 
 * Resources
