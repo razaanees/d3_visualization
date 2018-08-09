@@ -4,9 +4,9 @@ function main() {
     'use strict';
 
     // width of slopegraph
-    var width = 380;
+    var width = 300;
     // years to be shown from the data
-    var keyValues = ['2015', '2016', '2017'];
+    var keyValues = ['2015', '2016', '2017', '2018'];
     // implement a slider to allow users to select the percentage of happiness
     // increase or decrease
     var slider;
@@ -197,7 +197,7 @@ function main() {
         slopegraph = slopey()
             .w(width)
 
-            .margin({top: 30, bottom: 20, left: 140, right: 140})
+            .margin({top: 30, bottom: 20, left: 100, right: 100})
             .gutter(25)
             .keyName('country')
             .keyValues(keys)
@@ -393,6 +393,7 @@ function main() {
         d["2015"] = +d["2015"];
         d["2016"] = +d["2016"];
         d["2017"] = +d["2017"];
+        d["2018"] = +d["2018"];
     });
         // initial render of chart
         render(data, keyValues, percentage);
